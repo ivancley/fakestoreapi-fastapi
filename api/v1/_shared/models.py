@@ -11,6 +11,9 @@ from sqlalchemy import (
     Column,
     DateTime, 
     String,
+    Float,
+    Integer,
+    Text
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import  declarative_base
@@ -44,3 +47,16 @@ class User(BaseModel):
     email = Column(String(255), nullable=False, unique=True, index=True)   
     password = Column(String(255), nullable=True)
     permissions = Column(ARRAY(String), nullable=False, default=list, server_default='{}')
+
+
+class Product(BaseModel):
+    __tablename__ = 'product' 
+    
+    id_api = Column(Integer, nullable=False)
+    title = Column(String(255), nullable=False)
+    price = Column(Float, nullable=False)
+    description = Column(Text, nullable=False)
+    category = Column(String(255), nullable=False)
+    image = Column(String(255), nullable=False)
+    rate = Column(Float, nullable=False)
+    count = Column(Integer, nullable=False)

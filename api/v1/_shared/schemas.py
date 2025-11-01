@@ -3,12 +3,14 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, Field, model_validator
 
-from api.v1._shared.models import BaseModel as CustomBaseModel, get_permissions
+from fastapi_filter.contrib.sqlalchemy import Filter
+
+from api.v1._shared.models import BaseModel as CustomBaseModel, get_permissions, User, Product
 
 
 
 class CustomBaseModel(BaseModel):
-    flg_deleted: bool = Field(False)
+    #flg_deleted: bool = Field(False)
     model_config: Dict[str, Any] = {
         "arbitrary_types_allowed": True,
         "from_attributes": True 
@@ -40,7 +42,9 @@ class UserUpdate(BaseModel):
             valid_perms = set(get_permissions())
             invalid = set(self.permissions) - valid_perms
             if invalid:
-                raise ValueError(f"Permissões inválidas: {', '.join(invalid)}. Permissões válidas: {', '.join(valid_perms)}")
+                raise ValueError(
+                    f"Permissões inválidas: {', '.join(invalid)}. Permissões válidas: {', '.join(valid_perms)}"
+                )
         return self
 
 
@@ -56,6 +60,17 @@ class UserResponse(BaseModel):
 class UserDelete(BaseModel):
     id: UUID
     password: str
+
+
+class UserFilter(Filter):
+    name__ilike: Optional[str] = None
+    email__ilike: Optional[str] = None
+    order_by: Optional[List[str]] = None
+    search: Optional[str] = None
+
+    class Constants(Filter.Constants):
+        model = User
+        search_model_fields = ["name", "email"]
 
 
 class AccountCreate(BaseModel):
@@ -95,3 +110,48 @@ class AccountResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
+class ProductBase(BaseModel):
+    id: Optional[UUID] = None
+    id_api: int
+    title: str
+    price: float
+    description: str
+    category: str
+    image: str
+    rate: float
+    count: int
+
+
+class ProductCreate(ProductBase):
+    pass
+
+
+class ProductUpdate(BaseModel):
+    id: Optional[UUID] = None
+    id_api: int
+    title: Optional[str] = None
+    price: Optional[float] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+    image: Optional[str] = None
+    rate: Optional[float] = None
+    count: Optional[int] = None
+
+
+class ProductResponse(ProductBase, CustomBaseModel):
+    id: Optional[UUID] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
+class ProductFilter(Filter):
+    title__ilike: Optional[str] = None
+    description__ilike: Optional[str] = None
+    category__ilike: Optional[str] = None
+    order_by: Optional[List[str]] = None
+    search: Optional[str] = None
+
+    class Constants(Filter.Constants):
+        model = Product
+        search_model_fields = ["title", "description", "category"]
