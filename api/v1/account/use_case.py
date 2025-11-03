@@ -12,6 +12,7 @@ from api.v1._shared.schemas import (
     UserCreate,
 )
 from api.v1.account.service import AccountService
+from api.v1.account.mapper import mapper_account_create_to_user_create
 
 class AccountUseCase:
     
@@ -19,12 +20,8 @@ class AccountUseCase:
         self.service = AccountService(db)
     
     async def register(self, data: AccountCreate) -> AccountResponse:
-        # adiciona permissao USER ao usuário criado
-        user_data = UserCreate.model_validate({
-            **data.__dict__,
-            "permissions": ["USER"]
-        })
-        return self.service.register(user_data)
+        user_create = mapper_account_create_to_user_create(data)
+        return self.service.register(user_create)
     
     async def login(self, data: AccountLogin) -> TokenResponse:
         return self.service.login(data)

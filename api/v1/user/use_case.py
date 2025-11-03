@@ -31,8 +31,8 @@ class UserUseCase:
     def get(self, id: UUID) -> UserResponse:
         return self.service.get(id)
 
-    def update(self, obj: UserUpdate) -> UserResponse:
-        return self.service.update(obj)
+    def update(self, user: UserUpdate) -> UserResponse:
+        return self.service.update(user)
 
-    def delete(self, obj: UserDelete) -> UserResponse:
-        return self.service.delete(obj)
+    def delete(self, user: UserDelete) -> UserResponse:
+        return self.service.delete(user)

@@ -20,7 +20,7 @@ from api.utils.security import (
 )
 from api.v1._shared.schemas import (
     AccountLogin,
-    AccountResponse,
+    UserResponse,
     UserCreate,
     TokenResponse,
     RefreshTokenResponse,
@@ -38,7 +38,7 @@ class AccountService:
     def __init__(self, db: Session):
         self.user_service = UserService(db)
         
-    def register(self, data: UserCreate) -> AccountResponse:
+    def register(self, data: UserCreate) -> UserResponse:
         """
         Registrar nova conta.
         
@@ -48,7 +48,7 @@ class AccountService:
         Returns:
             A conta criada
         """
-        # UserService.create() já valida se o email existe
+        
         user = self.user_service.create(data)
         return user
 

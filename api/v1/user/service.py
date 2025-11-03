@@ -68,13 +68,16 @@ class UserService:
     
     def user_exists(self, email: str) -> bool:
         query = select(User).where(
-            User.email == email,
-            User.flg_deleted == False
+            User.email == email.lower()
         )
         result = self.db.execute(query)
         user = result.scalar_one_or_none()
+
+        if user:
+            return True
         
-        return user is not None
+        return False
+    
     
     def get_user_by_email(self, email: str, password: str) -> User:
         query = select(User).where(
@@ -85,7 +88,7 @@ class UserService:
         user = result.scalar_one_or_none()
 
         # Existe usuário? 
-        if not user:
+        if not self.user_exists(email):
             raise exception_404_NOT_FOUND(detail=f"Usuário com email {email} não encontrado")
 
         # Senha correta?
@@ -115,7 +118,7 @@ class UserService:
             name=obj.name,
             email=obj.email,
             password=hashed_password,
-            permissions=obj.permissions or []
+            permissions=obj.permissions or ['USER']
         )
         
         try:
@@ -143,19 +146,6 @@ class UserService:
         if not user:
             raise exception_404_NOT_FOUND(detail=f"Usuário com ID {obj.id} não encontrado")
         
-        # Verificar se email já existe em outro usuário
-        if obj.email and obj.email != user.email:
-            query = select(User).where(
-                User.email == obj.email,
-                User.flg_deleted == False,
-                User.id != obj.id
-            )
-            result = self.db.execute(query)
-            existing_user = result.scalar_one_or_none()
-            
-            if existing_user:
-                raise exception_400_BAD_REQUEST(detail=f"Email {obj.email} já está em uso")
-        
         # Atualizar campos se fornecidos usando model_dump (exclui None e id)
         update_data = obj.model_dump(exclude_none=True, exclude={"id", "password"})
         
@@ -172,7 +162,6 @@ class UserService:
         return mapper_user_to_user_response(user)
 
     def delete(self, obj: UserDelete) -> UserResponse:
-        # Deleta um usuário após validar a senha
         query = select(User).where(
             User.id == obj.id,
             User.flg_deleted == False
@@ -180,14 +169,9 @@ class UserService:
         result = self.db.execute(query)
         user = result.scalar_one_or_none()
         
-        if not user:
-            raise exception_404_NOT_FOUND(detail=f"Usuário com ID {obj.id} não encontrado")
-        
-        # Validar senha
         if not verify_password(obj.password, user.password):
             raise exception_401_UNAUTHORIZED(detail="Senha incorreta")
         
-        # Soft delete
         user.flg_deleted = True
         self.db.commit()
         

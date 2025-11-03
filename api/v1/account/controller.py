@@ -41,16 +41,10 @@ async def register(
     - email: Email único do usuário
     - password: Senha para acesso
     """
-    try:
-        use_case = AccountUseCase(db)
-        account = await use_case.register(data=data)
-        return account
-    except HTTPException as http_exc:
-        raise http_exc
-    except Exception as e:
-        raise exception_500_INTERNAL_SERVER_ERROR(
-            f"Erro interno ao registrar conta"
-        )
+    use_case = AccountUseCase(db)
+    account = await use_case.register(data)
+    return account
+   
 
 @router.post(
     "/login",

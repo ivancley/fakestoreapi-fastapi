@@ -13,7 +13,7 @@ from api.v1._shared.schemas import (
     ProductUpdate,
 )
 
-class SQLService:
+class ProductService:
 
     def __init__(self, db: Session):
         self.db = db
@@ -84,17 +84,8 @@ class SQLService:
         return ProductResponse.model_validate(product)
 
     def delete(self, id: int) -> ProductResponse:
-        query = select(Product).where(
-            Product.id == id,
-            Product.flg_deleted == False
-        )
-        result = self.db.execute(query)
-        product = result.scalar_one_or_none()
+        product = self.get(id)
         
-        if not product:
-            raise exception_404_NOT_FOUND(detail=f"Produto com ID {id} não encontrado")
-        
-        # Soft delete
         product.flg_deleted = True
         self.db.commit()
         
@@ -102,17 +93,11 @@ class SQLService:
     
     
     def save_or_update(self, product: ProductCreate) -> ProductResponse:
-        product = self.get_by_id_api(product.id_api)
+        product_exists = self.get_by_id_api(product.id_api)
 
-        if product:
-            update_data = product.model_dump(exclude_none=True, exclude={"id"})
-            for field, value in update_data.items():
-                setattr(product, field, value)
-
-            self.db.commit()
-            self.db.refresh(product)
-            return ProductResponse.model_validate(product)
+        if product_exists:
+            return self.update(product)
+            
         else:
-
             return self.create(product)
        

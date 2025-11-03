@@ -7,7 +7,7 @@ from api.v1.router import routes
 
 
 app = FastAPI(
-    title="Fakestore API - FastAPI - IA", 
+    title="Fakestore API - FastAPI", 
     version="0.0.1"
 )
 
@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/health")
+@app.get("/health", summary="Show API Status")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 

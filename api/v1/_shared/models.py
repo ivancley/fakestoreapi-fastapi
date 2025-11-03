@@ -13,10 +13,11 @@ from sqlalchemy import (
     String,
     Float,
     Integer,
-    Text
+    Text,
+    ForeignKey
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import  declarative_base
+from sqlalchemy.orm import  declarative_base, relationship
 
 
 Base = declarative_base()
@@ -48,6 +49,7 @@ class User(BaseModel):
     password = Column(String(255), nullable=True)
     permissions = Column(ARRAY(String), nullable=False, default=list, server_default='{}')
 
+    favorites = relationship('Favorite', back_populates='user')
 
 class Product(BaseModel):
     __tablename__ = 'product' 
@@ -60,3 +62,16 @@ class Product(BaseModel):
     image = Column(String(255), nullable=False)
     rate = Column(Float, nullable=False)
     count = Column(Integer, nullable=False)
+
+    favorites = relationship('Favorite', back_populates='product')
+
+
+class Favorite(BaseModel):
+    __tablename__ = 'favorite'
+    
+    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('user.id'), nullable=False)
+    product_id = Column(PG_UUID(as_uuid=True), ForeignKey('product.id'), nullable=False)
+    review = Column(Text, nullable=False)
+    
+    user = relationship('User', back_populates='favorites')
+    product = relationship('Product', back_populates='favorites')

@@ -14,13 +14,13 @@ from api.v1.fakestoreapi.services.background_task import (
 )
 from api.v1.fakestoreapi.services.background_task import get_products_api
 from api.v1.fakestoreapi.services.redis import RedisService
-from api.v1.fakestoreapi.services.sql import SQLService
+from api.v1.fakestoreapi.services.sql import ProductService
 from api.utils.exceptions import exception_404_NOT_FOUND
 
 class ProductUseCase:
 
     def __init__(self, db: Session):
-        self.serviceSQL = SQLService(db)
+        self.serviceSQL = ProductService(db)
         self.serviceAPI = APIService()
         self.serviceRedis = RedisService()
 

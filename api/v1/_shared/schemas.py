@@ -1,11 +1,17 @@
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
-from datetime import datetime
-from pydantic import BaseModel, Field, model_validator
 
 from fastapi_filter.contrib.sqlalchemy import Filter
+from pydantic import BaseModel, Field, model_validator
 
-from api.v1._shared.models import BaseModel as CustomBaseModel, get_permissions, User, Product
+from api.v1._shared.models import (
+    BaseModel as CustomBaseModel,
+    Favorite,
+    Product,
+    User,
+    get_permissions,
+)
 
 
 
@@ -32,7 +38,6 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     id: UUID
     name: Optional[str] = None
-    email: Optional[str] = None
     password: Optional[str] = None
     permissions: Optional[List[str]] = None
     
@@ -155,3 +160,41 @@ class ProductFilter(Filter):
     class Constants(Filter.Constants):
         model = Product
         search_model_fields = ["title", "description", "category"]
+
+
+class FavoriteBase(BaseModel):
+    user_id: UUID
+    product_id: UUID
+    review: str
+
+
+class FavoriteCreate(BaseModel):
+    api_id: int
+    review: Optional[str] = None
+
+
+class FavoriteUpdate(BaseModel):
+    id: UUID
+    review: str = ""
+
+
+class FavoriteResponse(BaseModel):
+    id: UUID
+    title: str
+    image: str
+    price: float
+    review: Optional[str] = None
+
+
+class FavoriteDelete(BaseModel):
+    id: UUID
+
+
+class FavoriteFilter(Filter):
+    review__ilike: Optional[str] = None
+    order_by: Optional[List[str]] = None
+    search: Optional[str] = None
+
+    class Constants(Filter.Constants):
+        model = Favorite
+        search_model_fields = ["review"]

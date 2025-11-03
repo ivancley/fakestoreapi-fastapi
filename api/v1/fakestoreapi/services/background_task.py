@@ -9,7 +9,7 @@ from api.v1._shared.schemas import ProductCreate
 from api.v1.fakestoreapi.mapper import mapper_list_products_to_list_dict
 from api.v1.fakestoreapi.services.api import APIService
 from api.v1.fakestoreapi.services.redis import RedisService
-from api.v1.fakestoreapi.services.sql import SQLService
+from api.v1.fakestoreapi.services.sql import ProductService
 
 DELAY_TIME = 60
 MAX_RETRIES = 3
@@ -58,7 +58,7 @@ def get_products_api(self):
 def save_or_update_products_in_database_sql_task(self, products: List[Dict[str, Any]]):
     logging.info(f"Celery starting save_or_update_products_in_database_sql_task")
     db = SessionLocal() 
-    serviceSQL = SQLService(db)
+    serviceSQL = ProductService(db)
     try:
         for product in products:
             serviceSQL.save_or_update(ProductCreate(**product))
@@ -78,7 +78,7 @@ def save_or_update_products_in_database_sql_task(self, products: List[Dict[str, 
 def save_or_update_product_task(product: Dict[str, Any]):
     logging.info(f"Celery starting save_or_update_product_task")
     db = SessionLocal() 
-    serviceSQL = SQLService(db)
+    serviceSQL = ProductService(db)
     try:
         serviceSQL.save_or_update(ProductCreate(**product))
 
