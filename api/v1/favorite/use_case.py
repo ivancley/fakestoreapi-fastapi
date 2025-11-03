@@ -1,7 +1,7 @@
 from typing import List
 from uuid import UUID
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1._shared.schemas import (
     FavoriteDelete,
@@ -14,13 +14,13 @@ from api.v1._shared.schemas import (
 from api.v1.favorite.service import FavoriteService
 from api.v1.fakestoreapi.services.redis import RedisService
 from api.v1.fakestoreapi.services.api import APIService
-from api.v1.fakestoreapi.services.sql import ProductService
+from api.v1.fakestoreapi.services.produto_async import ProductService
 from api.utils.exceptions import exception_404_NOT_FOUND
 from api.v1.favorite.mapper import mapper_favorite_to_favorite_response
 
 class FavoriteUseCase:
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.serviceFavorite = FavoriteService(db)
         self.serviceProduct = ProductService(db)
         self.serviceRedis = RedisService()
@@ -33,7 +33,7 @@ class FavoriteUseCase:
         favorite_filter: FavoriteFilter = None,
         current_user: User = None
     ) -> List[FavoriteResponse]:
-        favorites = self.serviceFavorite.list(
+        favorites = await self.serviceFavorite.list(
             skip=skip,
             limit=limit,
             favorite_filter=favorite_filter,
@@ -41,7 +41,7 @@ class FavoriteUseCase:
         return [mapper_favorite_to_favorite_response(favorite) for favorite in favorites]
 
     async def get(self, id: UUID, current_user: User) -> FavoriteResponse:
-        favorite = self.serviceFavorite.get(id, current_user)
+        favorite = await self.serviceFavorite.get(id, current_user)
         return mapper_favorite_to_favorite_response(favorite)
 
     async def create(self, favorite: FavoriteCreate, current_user: User) -> FavoriteResponse:
@@ -66,20 +66,20 @@ class FavoriteUseCase:
 
             except Exception:
                 # Verifica no banco SQL local
-                product =  self.serviceProduct.get_by_id_api(favorite.api_id)
+                product = await self.serviceProduct.get_by_id_api(favorite.api_id)
                 if product:
                     product_exists = True
         
         if product_exists:
-            favorite = self.serviceFavorite.create(favorite, current_user)
+            favorite = await self.serviceFavorite.create(favorite, current_user)
             return mapper_favorite_to_favorite_response(favorite)
         else:
             raise exception_404_NOT_FOUND(detail=f"Produto com ID {favorite.api_id} não encontrado")
 
     async def update(self, favorite: FavoriteUpdate, current_user: User) -> FavoriteResponse:
-        new_favorite = self.serviceFavorite.update(favorite, current_user)
-        return mapper_favorite_to_favorite_response(new_favorite)
+        updated_favorite = await self.serviceFavorite.update(favorite, current_user)
+        return updated_favorite
 
-    async def delete(self, favorite: FavoriteDelete, current_user: User) -> FavoriteResponse:
-        deleted_favorite = self.serviceFavorite.delete(favorite, current_user)
+    async def delete(self, favorite_id: UUID, current_user: User) -> FavoriteResponse:
+        deleted_favorite = await self.serviceFavorite.delete(favorite_id, current_user)
         return mapper_favorite_to_favorite_response(deleted_favorite)

@@ -4,7 +4,8 @@ from decouple import config
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession 
+from sqlalchemy import select
 from uuid import UUID
 
 from api.utils.db_services import get_db
@@ -78,16 +79,22 @@ def verify_refresh_token(token: str) -> dict:
             detail="Refresh token inválido",
         )
 
-def authenticate_user(db: Session, email: str, senha: str) -> User:
+async def authenticate_user(db: AsyncSession, email: str, senha: str) -> User:
     """Autentica um usuário pelo email e senha."""
-    usuario = db.query(User).filter(User.email == email).first()
+    query = select(User).where(
+        User.email == email,
+        User.flg_deleted == False
+    )
+    result = await db.execute(query)
+    usuario = result.scalar_one_or_none()
+    
     if not usuario or not verify_password(senha, usuario.password):
         return False
     return usuario
 
-def get_current_user(
+async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ) -> User:
     """Retorna o usuário atual autenticado através do token JWT."""
     credentials_exception = exception_401_UNAUTHORIZED(
@@ -120,10 +127,12 @@ def get_current_user(
     except (ValueError, TypeError):
         raise credentials_exception
     
-    usuario = db.query(User).filter(
+    query = select(User).where(
         User.id == user_uuid,
         User.flg_deleted == False
-    ).first()
+    )
+    result = await db.execute(query)
+    usuario = result.scalar_one_or_none()
     
     if usuario is None:
         raise credentials_exception

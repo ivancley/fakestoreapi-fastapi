@@ -38,7 +38,7 @@ async def list(
         - order_by: Ordenação (ex: order_by=name ou order_by=-created_at)
     """
     use_case = UserUseCase(db)
-    return use_case.list(
+    return await use_case.list(
         skip=skip,
         limit=limit,
         user_filter=user_filter
@@ -57,7 +57,7 @@ async def get_by_id(
     - id: ID do usuário
     """
     use_case = UserUseCase(db)
-    return use_case.get(id)
+    return await use_case.get(id)
 
 @router.put("", response_model=UserResponse)
 async def update(
@@ -71,7 +71,7 @@ async def update(
     - User: Dados do usuário a ser atualizado
     """
     use_case = UserUseCase(db)
-    return use_case.update(User)
+    return await use_case.update(User, current_user)
 
 
 @router.delete("", response_model=UserResponse)
@@ -86,4 +86,4 @@ async def delete(
     - User: Dados do usuário a ser deletado
     """
     use_case = UserUseCase(db)
-    return use_case.delete(User)
+    return await use_case.delete(User)

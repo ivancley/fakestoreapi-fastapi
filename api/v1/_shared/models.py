@@ -54,7 +54,7 @@ class User(BaseModel):
 class Product(BaseModel):
     __tablename__ = 'product' 
     
-    id_api = Column(Integer, nullable=False)
+    id_api = Column(Integer, nullable=False, index=True)
     title = Column(String(255), nullable=False)
     price = Column(Float, nullable=False)
     description = Column(Text, nullable=False)
@@ -73,5 +73,5 @@ class Favorite(BaseModel):
     product_id = Column(PG_UUID(as_uuid=True), ForeignKey('product.id'), nullable=False)
     review = Column(Text, nullable=False)
     
-    user = relationship('User', back_populates='favorites')
-    product = relationship('Product', back_populates='favorites')
+    user = relationship('User', back_populates='favorites', lazy='selectin')
+    product = relationship('Product', back_populates='favorites', lazy='selectin')

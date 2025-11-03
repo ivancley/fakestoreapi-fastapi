@@ -90,9 +90,9 @@ async def update(
     return await use_case.update(Favorite, current_user)
 
 
-@router.delete("", response_model=FavoriteResponse)
+@router.delete("/{id}", response_model=FavoriteResponse)
 async def delete(
-    favorite: FavoriteDelete,
+    id: UUID,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> FavoriteResponse:
@@ -102,4 +102,4 @@ async def delete(
     - id: ID do favorito a ser deletado
     """
     use_case = FavoriteUseCase(db)
-    return await use_case.delete(favorite, current_user)
+    return await use_case.delete(id, current_user)

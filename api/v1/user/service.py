@@ -3,7 +3,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.utils.exceptions import (
     exception_400_BAD_REQUEST,
@@ -24,10 +24,10 @@ from api.v1.user.mapper import mapper_user_to_user_response
 
 class UserService:
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
-    def list(
+    async def list(
         self,
         skip: int = 0,
         limit: int = 10,
@@ -46,19 +46,19 @@ class UserService:
             query = query.order_by(User.created_at.desc())
 
         # Aplicar paginação
-        result = self.db.execute(query.offset(skip).limit(limit))
+        result = await self.db.execute(query.offset(skip).limit(limit))
         users = result.scalars().all()
 
         # Converter para schema de resposta
         return [mapper_user_to_user_response(user) for user in users]
 
 
-    def get(self, id: UUID) -> UserResponse:
+    async def get(self, id: UUID) -> UserResponse:
         query = select(User).where(
             User.id == id,
             User.flg_deleted == False
         )
-        result = self.db.execute(query)
+        result = await self.db.execute(query)
         user = result.scalar_one_or_none()
         
         if not user:
@@ -66,11 +66,11 @@ class UserService:
         
         return mapper_user_to_user_response(user)
     
-    def user_exists(self, email: str) -> bool:
+    async def user_exists(self, email: str) -> bool:
         query = select(User).where(
             User.email == email.lower()
         )
-        result = self.db.execute(query)
+        result = await self.db.execute(query)
         user = result.scalar_one_or_none()
 
         if user:
@@ -79,12 +79,12 @@ class UserService:
         return False
     
     
-    def get_user_by_email(self, email: str, password: str) -> User:
+    async def get_user_by_email(self, email: str, password: str) -> User:
         query = select(User).where(
             User.email == email,
             User.flg_deleted == False
         )
-        result = self.db.execute(query)
+        result = await self.db.execute(query)
         user = result.scalar_one_or_none()
 
         # Existe usuário? 
@@ -98,13 +98,13 @@ class UserService:
         # Retorna usuário
         return user
 
-    def create(self, obj: UserCreate) -> UserResponse:
+    async def create(self, obj: UserCreate) -> UserResponse:
         # Verificar se email já existe
         query = select(User).where(
             User.email == obj.email,
             User.flg_deleted == False
         )
-        result = self.db.execute(query)
+        result = await self.db.execute(query)
         existing_user = result.scalar_one_or_none()
         
         if existing_user:
@@ -123,24 +123,21 @@ class UserService:
         
         try:
             self.db.add(new_user)
-            self.db.commit()
-            self.db.refresh(new_user)
+            await self.db.commit()
+            await self.db.refresh(new_user)
+            await self.db.flush()
         except IntegrityError as e:
-            self.db.rollback()
-            
-            # Verificar se é erro de email duplicado
-            if "email" in str(e.orig).lower() or "unique" in str(e.orig).lower():
-                raise exception_400_BAD_REQUEST(detail=f"Email {obj.email} já está em uso")
-            raise
+            await self.db.rollback()
+            raise exception_400_BAD_REQUEST(detail=f"Erro ao criar usuário: {str(e)}")
         
         return mapper_user_to_user_response(new_user)
 
-    def update(self, obj: UserUpdate) -> UserResponse:
+    async def update(self, obj: UserUpdate) -> UserResponse:
         query = select(User).where(
             User.id == obj.id,
             User.flg_deleted == False
         )
-        result = self.db.execute(query)
+        result = await self.db.execute(query)
         user = result.scalar_one_or_none()
         
         if not user:
@@ -156,23 +153,23 @@ class UserService:
         if obj.password is not None:
             user.password = get_password_hash(obj.password)
         
-        self.db.commit()
-        self.db.refresh(user)
+        await self.db.commit()
+        await self.db.refresh(user)
         
         return mapper_user_to_user_response(user)
 
-    def delete(self, obj: UserDelete) -> UserResponse:
+    async def delete(self, obj: UserDelete) -> UserResponse:
         query = select(User).where(
             User.id == obj.id,
             User.flg_deleted == False
         )
-        result = self.db.execute(query)
+        result = await self.db.execute(query)
         user = result.scalar_one_or_none()
         
         if not verify_password(obj.password, user.password):
             raise exception_401_UNAUTHORIZED(detail="Senha incorreta")
         
         user.flg_deleted = True
-        self.db.commit()
+        await self.db.commit()
         
         return mapper_user_to_user_response(user)

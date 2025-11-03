@@ -6,12 +6,10 @@ from decouple import config
 
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.utils.exceptions import (
-    exception_400_BAD_REQUEST,
     exception_401_UNAUTHORIZED,
-    exception_500_INTERNAL_SERVER_ERROR,
 )
 from api.utils.security import (
     create_access_token,
@@ -35,10 +33,10 @@ class AccountService:
     Serviço para autenticação e gerenciamento de contas.
     """
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.user_service = UserService(db)
         
-    def register(self, data: UserCreate) -> UserResponse:
+    async def register(self, data: UserCreate) -> UserResponse:
         """
         Registrar nova conta.
         
@@ -49,10 +47,10 @@ class AccountService:
             A conta criada
         """
         
-        user = self.user_service.create(data)
+        user = await self.user_service.create(data)
         return user
 
-    def login(self, data: AccountLogin) -> TokenResponse:
+    async def login(self, data: AccountLogin) -> TokenResponse:
         """
         Autenticar usuário e gerar tokens.
         
@@ -62,7 +60,7 @@ class AccountService:
         Returns:
             TokenResponse
         """
-        user = self.user_service.get_user_by_email(data.email, data.password)
+        user = await self.user_service.get_user_by_email(data.email, data.password)
         
         # Povoar dados do token
         token_data = {
@@ -82,7 +80,7 @@ class AccountService:
             expires_in=int(ACCESS_TOKEN_EXPIRE_MINUTES) * 60, 
         )
     
-    def refresh_token(self, refresh_token: str) -> RefreshTokenResponse:
+    async def refresh_token(self, refresh_token: str) -> RefreshTokenResponse:
         """
         Gerenciar geração de novo access token usando refresh token.
         
@@ -92,7 +90,7 @@ class AccountService:
         payload = verify_refresh_token(refresh_token)
         user_id = payload.get("sub") 
 
-        user = self.user_service.get(UUID(user_id))
+        user = await self.user_service.get(UUID(user_id))
 
         if not user:
             raise exception_401_UNAUTHORIZED(detail="Token inválido")

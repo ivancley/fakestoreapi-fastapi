@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.utils.db_services import get_db
 from api.utils.exceptions import (
-    exception_404_NOT_FOUND,
     exception_500_INTERNAL_SERVER_ERROR,
 )
 from api.utils.security import get_current_user
@@ -32,7 +31,7 @@ router = APIRouter(
 )
 async def register(
     data: AccountCreate, 
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Registrar novo usuário
@@ -53,7 +52,7 @@ async def register(
 )
 async def login(
     data: AccountLogin,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Autenticar usuário e retornar tokens de acesso e refresh.
@@ -79,7 +78,7 @@ async def login(
 )
 async def refresh_token(
     data: RefreshTokenRequest,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Gerar novo token de acesso usando refresh token.
@@ -104,18 +103,14 @@ async def refresh_token(
 )
 async def get_me(
     current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Obter perfil do usuário autenticado.
     """
     try:
-        # Converter User para AccountResponse
-        from api.v1._shared.schemas import AccountResponse
-        
-        return AccountResponse.model_validate({
-            **current_user.__dict__,
-            "permissions": current_user.permissions or []
-        })
+        use_case = AccountUseCase(db)
+        return await use_case.get_me(current_user)
     
     except Exception as e:
         raise exception_500_INTERNAL_SERVER_ERROR(

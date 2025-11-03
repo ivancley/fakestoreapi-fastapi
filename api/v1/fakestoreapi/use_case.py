@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1._shared.schemas import ProductResponse
 from api.v1.fakestoreapi.mapper import (
@@ -14,12 +14,12 @@ from api.v1.fakestoreapi.services.background_task import (
 )
 from api.v1.fakestoreapi.services.background_task import get_products_api
 from api.v1.fakestoreapi.services.redis import RedisService
-from api.v1.fakestoreapi.services.sql import ProductService
+from api.v1.fakestoreapi.services.produto_async import ProductService
 from api.utils.exceptions import exception_404_NOT_FOUND
 
 class ProductUseCase:
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.serviceSQL = ProductService(db)
         self.serviceAPI = APIService()
         self.serviceRedis = RedisService()
@@ -47,7 +47,7 @@ class ProductUseCase:
 
         except Exception:
             # Se API falhar, continuar e retornar do banco local
-            return self.serviceSQL.list()
+            return await self.serviceSQL.list()
         
         # Sempre retornar produtos do banco local
         return products
@@ -78,8 +78,8 @@ class ProductUseCase:
             pass 
 
         try:
-            product = self.serviceSQL.get_by_id_api(id)
-            return ProductResponse.model_validate(product)
+            product = await self.serviceSQL.get_by_id_api(id)
+            return await self.serviceSQL.get(id)
         
         except Exception:
             raise exception_404_NOT_FOUND(detail=f"Produto com ID {id} não encontrado")
