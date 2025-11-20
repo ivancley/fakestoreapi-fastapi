@@ -80,35 +80,41 @@ class UserService:
     
     
     async def get_user_by_email(self, email: str, password: str) -> User:
+        # Normalizar email para lowercase para garantir consistência
+        email_lower = email.lower()
+        
         query = select(User).where(
-            User.email == email,
+            User.email == email_lower,
             User.flg_deleted == False
         )
         result = await self.db.execute(query)
         user = result.scalar_one_or_none()
 
-        # Existe usuário? 
-        if not self.user_exists(email):
-            raise exception_404_NOT_FOUND(detail=f"Usuário com email {email} não encontrado")
+        # Verificar se usuário existe
+        if not user:
+            raise exception_401_UNAUTHORIZED(detail="Email ou senha incorretos")
 
-        # Senha correta?
+        # Verificar senha
         if not verify_password(password, user.password):
-            raise exception_401_UNAUTHORIZED(detail="Senha incorreta")
+            raise exception_401_UNAUTHORIZED(detail="Email ou senha incorretos")
         
         # Retorna usuário
         return user
 
     async def create(self, obj: UserCreate) -> UserResponse:
+        # Normalizar email para lowercase
+        email_lower = obj.email.lower()
+        
         # Verificar se email já existe
         query = select(User).where(
-            User.email == obj.email,
+            User.email == email_lower,
             User.flg_deleted == False
         )
         result = await self.db.execute(query)
         existing_user = result.scalar_one_or_none()
         
         if existing_user:
-            raise exception_400_BAD_REQUEST(detail=f"Email {obj.email} já está em uso")
+            raise exception_400_BAD_REQUEST(detail=f"Email {email_lower} já está em uso")
         
         # Hash da senha
         hashed_password = get_password_hash(obj.password)
@@ -116,7 +122,7 @@ class UserService:
         # Criar usuário
         new_user = User(
             name=obj.name,
-            email=obj.email,
+            email=email_lower,
             password=hashed_password,
             permissions=obj.permissions or ['USER']
         )
