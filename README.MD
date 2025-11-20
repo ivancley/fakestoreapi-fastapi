@@ -8,7 +8,7 @@
 
 Uma API RESTful moderna, escalável e resiliente que integra dados da [FakeStoreAPI](https://fakestoreapi.com/), implementando estratégias avançadas de cache, processamento assíncrono e fallback automático para garantir alta disponibilidade mesmo em cenários de falha da API externa.
 
-##  Índice
+## Índice
 
 - [Sobre o Projeto](#-sobre-o-projeto)
 - [Características Principais](#-características-principais)
@@ -21,7 +21,7 @@ Uma API RESTful moderna, escalável e resiliente que integra dados da [FakeStore
 - [Endpoints](#-endpoints)
 - [Documentação](#-documentação)
 
-##  Sobre o Projeto
+## Sobre o Projeto
 
 Este projeto demonstra a implementação de uma arquitetura robusta para integração com APIs externas, focando em:
 
@@ -31,16 +31,16 @@ Este projeto demonstra a implementação de uma arquitetura robusta para integra
 - **Segurança**: Autenticação JWT com controle de acesso baseado em perfis (ADMIN/USER)
 - **Manutenibilidade**: Padrão Clean Architecture com separação clara de responsabilidades
 
-##  Características Principais
+## Características Principais
 
-###  Autenticação e Autorização
+### Autenticação e Autorização
 
 - **Autenticação JWT**: Sistema stateless com tokens de acesso e refresh
 - **Controle de Acesso por Perfil**:
   - **ADMIN**: Visualiza e gerencia favoritos de todos os usuários
   - **USER**: Visualiza e gerencia apenas seus próprios favoritos
 
-###  Performance e Escalabilidade
+### Performance e Escalabilidade
 
 - **Cache em Memória (Redis)**: Redução drástica de latência para consultas frequentes
 - **Processamento Assíncrono (Celery)**: Atualização de cache e persistência em background
@@ -50,31 +50,31 @@ Este projeto demonstra a implementação de uma arquitetura robusta para integra
   - Workers Celery dedicados para tarefas pesadas
   - Clusters Redis e PostgreSQL para alta disponibilidade
 
-###  Resiliência
+### Resiliência
 
 - **Fallback Automático**: Em caso de falha da API externa, retorna dados do banco local
 - **TTL Configurável**: Tempo de vida do cache ajustável via variáveis de ambiente
 - **Tratamento de Erros**: Respostas consistentes mesmo em cenários de erro
 
-###  Integridade dos Dados
+### Integridade dos Dados
 
 - **PostgreSQL**: Banco relacional com integridade referencial
 - **Índices Otimizados**: Consultas eficientes em campos de busca
 - **Migrações Versionadas**: Alembic para controle de schema
 
-##  Arquitetura
+## Arquitetura
 
 O projeto segue os princípios de **Clean Architecture** e **SOLID**, organizando o código em camadas bem definidas:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    FastAPI (Controller)                  │
-│              Camada de apresentação/HTTP                 │
+│                    FastAPI (Controller)                 │
+│              Camada de apresentação/HTTP                │
 └──────────────────────┬──────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────┐
 │                    Use Case Layer                       │
-│         Orquestração de regras de negócio              │
+│         Orquestração de regras de negócio               │
 └──────────────────────┬──────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────┐
@@ -102,7 +102,7 @@ O projeto segue os princípios de **Clean Architecture** e **SOLID**, organizand
 3. **Service** → Executa operações específicas
 4. **Cache/DB** → Acessa dados conforme estratégia de resiliência
 
-##  Tecnologias
+## Tecnologias
 
 
 | Categoria                | Tecnologia      | Versão | Uso                          |
@@ -118,7 +118,7 @@ O projeto segue os princípios de **Clean Architecture** e **SOLID**, organizand
 | **Validação**          | Pydantic        | 2.12.3  | Validação de dados         |
 | **Documentação**       | Swagger/OpenAPI | -       | Documentação interativa    |
 
-##  Estratégia de Resiliência e Cache
+## Estratégia de Resiliência e Cache
 
 A aplicação implementa uma estratégia de **Cache-Aside Pattern** com fallback automático:
 
@@ -162,8 +162,8 @@ A aplicação implementa uma estratégia de **Cache-Aside Pattern** com fallback
 
 - Se cache ausente ou expirado, consulta a FakeStoreAPI
 - Ao obter resposta bem-sucedida:
-  - ✅ Retorna dados ao cliente imediatamente
-  - 🔄 Envia tarefa assíncrona ao Celery para:
+  - Retorna dados ao cliente imediatamente
+  - Envia tarefa assíncrona ao Celery para:
     - Atualizar cache Redis
     - Persistir/atualizar no PostgreSQL
 
@@ -176,7 +176,7 @@ A aplicação implementa uma estratégia de **Cache-Aside Pattern** com fallback
 
 > **Nota**: Este comportamento é aplicado tanto em `/api/v1/fakestoreapi` (lista) quanto em `/api/v1/fakestoreapi/{id}` (detalhe).
 
-##  Pré-requisitos
+## Pré-requisitos
 
 ### Opção 1: Instalação Local
 
@@ -193,7 +193,7 @@ A aplicação implementa uma estratégia de **Cache-Aside Pattern** com fallback
 
 > 💡 **Recomendação**: Use Docker para uma instalação mais rápida e sem necessidade de configurar PostgreSQL e Redis manualmente.
 
-##  Instalação
+## Instalação
 
 ### 1. Clone o repositório
 
@@ -264,7 +264,7 @@ Ao executar as migrações, um usuário administrador é criado automaticamente 
 
 > **Nota**: Este usuário é criado pela migração `create_admin_user`. Se o usuário já existir, a migração não criará duplicatas.
 
-##  Instalação com Docker
+## Instalação com Docker
 
 A forma mais simples de executar a aplicação é utilizando Docker Compose, que configura automaticamente todos os serviços necessários.
 
@@ -304,6 +304,7 @@ docker-compose up -d
 ```
 
 Este comando irá:
+
 - Construir a imagem da aplicação
 - Iniciar PostgreSQL na porta 5432
 - Iniciar Redis na porta 6379
@@ -370,17 +371,18 @@ Após iniciar os serviços, a API estará disponível em:
 - **Documentação ReDoc**: http://localhost:8000/redoc
 - **Health Check**: http://localhost:8000/health
 
-### 🔑 Credenciais do Usuário Administrador
+###  Credenciais do Usuário Administrador
 
 Um usuário administrador é criado automaticamente durante a execução das migrações do banco de dados. Use estas credenciais para fazer login:
 
-| Campo | Valor |
-|-------|-------|
-| **Email** | `admin@gmail.com` |
-| **Senha** | `Senha@123` |
-| **Permissões** | `ADMIN` |
 
-> ⚠️ **Importante**: Altere a senha padrão em ambientes de produção! O usuário é criado pela migração `2312760d89d5_create_admin_user.py` e não será duplicado se já existir.
+| Campo           | Valor             |
+| ----------------- | ------------------- |
+| **Email**       | `admin@gmail.com` |
+| **Senha**       | `Senha@123`       |
+| **Permissões** | `ADMIN`           |
+
+>  **Importante**: Altere a senha padrão em ambientes de produção! O usuário é criado pela migração `2312760d89d5_create_admin_user.py` e não será duplicado se já existir.
 
 ### Estrutura dos Serviços no Docker
 
@@ -388,25 +390,25 @@ Um usuário administrador é criado automaticamente durante a execução das mig
 ┌─────────────────────────────────────────┐
 │         Docker Compose Network          │
 │                                         │
-│  ┌──────────┐  ┌──────────┐           │
-│  │   API    │  │  Celery  │           │
-│  │ (FastAPI)│  │  Worker  │           │
-│  └────┬─────┘  └────┬──────┘           │
+│  ┌──────────┐  ┌──────────┐             │
+│  │   API    │  │  Celery  │             │
+│  │ (FastAPI)│  │  Worker  │             │
+│  └────┬─────┘  └────┬─────┘             │
 │       │             │                   │
-│       └──────┬──────┘                   │
+│       └─────┬───────┘                   │
 │             │                           │
-│  ┌──────────▼──────────┐               │
+│  ┌──────────▼───────────┐               │
 │  │      PostgreSQL      │               │
 │  └──────────────────────┘               │
 │                                         │
-│  ┌──────────▼──────────┐               │
+│  ┌──────────▼───────────┐               │
 │  │        Redis         │               │
 │  │  (Cache + Broker)    │               │
 │  └──────────────────────┘               │
 └─────────────────────────────────────────┘
 ```
 
-##  Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 fakestoreapi-fastapi-ia/
@@ -433,7 +435,7 @@ fakestoreapi-fastapi-ia/
 └── alembic.ini          # Configuração do Alembic
 ```
 
-##  Endpoints Principais
+## Endpoints Principais
 
 ### Autenticação (`/api/v1/account`)
 
@@ -466,7 +468,7 @@ fakestoreapi-fastapi-ia/
 
 > **Nota**: Todos os endpoints (exceto `/register` e `/login`) requerem autenticação via JWT.
 
-##  Documentação
+## Documentação
 
 A documentação interativa da API está disponível via Swagger UI:
 
@@ -480,20 +482,20 @@ Alternativamente, a documentação em formato ReDoc:
 http://localhost:8000/redoc
 ```
 
-##  Conceitos Aplicados
+## Conceitos Aplicados
 
 Este projeto demonstra a aplicação prática de:
 
-- ✅ **Clean Architecture** - Separação de responsabilidades
-- ✅ **SOLID Principles** - Código extensível e manutenível
-- ✅ **Design Patterns** - Cache-Aside, Repository, Use Case
-- ✅ **Async/Await** - Programação assíncrona em Python
-- ✅ **JWT Authentication** - Autenticação stateless
-- ✅ **Database Migrations** - Versionamento de schema
-- ✅ **Background Tasks** - Processamento assíncrono
-- ✅ **Error Handling** - Tratamento robusto de erros
-- ✅ **API Documentation** - OpenAPI/Swagger
+- **Clean Architecture** - Separação de responsabilidades
+- **SOLID Principles** - Código extensível e manutenível
+- **Design Patterns** - Cache-Aside, Repository, Use Case
+- **Async/Await** - Programação assíncrona em Python
+- **JWT Authentication** - Autenticação stateless
+- **Database Migrations** - Versionamento de schema
+- **Background Tasks** - Processamento assíncrono
+- **Error Handling** - Tratamento robusto de erros
+- **API Documentation** - OpenAPI/Swagger
 
 ---
 
-⭐ Se este projeto foi útil para você, considere dar uma estrela no repositório!
+Se este projeto foi útil para você, considere dar uma estrela no repositório!
